@@ -1,4 +1,4 @@
-#include "pad_thread.h"
+﻿#include "pad_thread.h"
 #include "ds4_pad_handler.h"
 #ifdef _WIN32
 #include "xinput_pad_handler.h"
@@ -63,7 +63,16 @@ void pad_thread::Init()
 	m_pads.clear();
 	handlers.clear();
 
-	g_cfg_input.load();
+	// If emu is running, always load the custom conf if exist
+	if (std::string tmp_cfg_name = fs::get_config_dir() + "data/" + Emu.GetTitleID() + "/config_input.yml"; fs::is_file(tmp_cfg_name))
+	{
+		g_cfg_input.load(tmp_cfg_name);
+	}
+	else
+	{
+		g_cfg_input.load();
+	}
+	
 
 	std::shared_ptr<keyboard_pad_handler> keyptr;
 

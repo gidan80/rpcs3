@@ -1,4 +1,4 @@
-#include <QCheckBox>
+﻿#include <QCheckBox>
 #include <QGroupBox>
 #include <QPushButton>
 #include <QVBoxLayout>
@@ -52,16 +52,26 @@ inline bool CreateConfigFile(const QString& dir, const QString& name)
 	return true;
 };
 
-pad_settings_dialog::pad_settings_dialog(QWidget *parent)
+pad_settings_dialog::pad_settings_dialog(QWidget *parent, const GameInfo *game)
 	: QDialog(parent), ui(new Ui::pad_settings_dialog)
 {
 	ui->setupUi(this);
 
-	setWindowTitle(tr("Gamepads Settings"));
-
 	// load input config
 	g_cfg_input.from_default();
-	g_cfg_input.load();
+
+	if (game)
+	{
+		m_game_path = fs::get_config_dir() + "data/" + game->serial;
+		setWindowTitle(tr("Gamepads Settings: [%0] %1").arg(qstr(game->serial)).arg(qstr(game->name)));
+	}
+	else
+	{
+		m_game_path = "";
+		setWindowTitle(tr("Gamepads Settings"));
+	}
+
+	g_cfg_input.load(m_game_path);
 
 	// Create tab widget for 7 players
 	m_tabs = new QTabWidget;
@@ -760,7 +770,7 @@ void pad_settings_dialog::ChangeInputType()
 	if (!g_cfg_input.player[player]->handler.from_string(handler))
 	{
 		// Something went wrong
-		LOG_ERROR(GENERAL, "Failed to convert input string:%s", handler);
+		LOG_ERROR(GENERAL, "Failed to convert input string: %s", handler);
 		return;
 	}
 
@@ -968,7 +978,7 @@ void pad_settings_dialog::SaveExit()
 		g_cfg_input.player[i]->profile.from_default();
 	}
 
-	g_cfg_input.save();
+	g_cfg_input.save(m_game_path);
 
 	ResetPadHandler();
 
